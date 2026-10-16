@@ -4,11 +4,17 @@ services:
     ports:
       - "8000:8000"
     environment:
-      APP_NAME: LocalDocs
-      DATABASE_URL: postgresql://localdocs:localdocs_dev_password@postgres:5432/localdocs
+      APP_NAME: ${APP_NAME:-LocalDocs}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-localdocs}:${POSTGRES_PASSWORD:-localdocs_dev_password}@postgres:5432/${POSTGRES_DB:-localdocs}
+      SEAWEEDFS_MASTER_URL: ${SEAWEEDFS_MASTER_URL:-http://seaweed-master:9333}
+      SEAWEEDFS_VOLUME_URL: ${SEAWEEDFS_VOLUME_URL:-http://seaweed-volume:8080}
     depends_on:
       postgres:
         condition: service_healthy
+      seaweed-master:
+        condition: service_started
+      seaweed-volume:
+        condition: service_started
     restart: unless-stopped
 
   frontend:
@@ -22,15 +28,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: localdocs
-      POSTGRES_USER: localdocs
-      POSTGRES_PASSWORD: localdocs_dev_password
+      POSTGRES_DB: ${POSTGRES_DB:-localdocs}
+      POSTGRES_USER: ${POSTGRES_USER:-localdocs}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-localdocs_dev_password}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U localdocs -d localdocs"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-localdocs} -d ${POSTGRES_DB:-localdocs}"]
       interval: 5s
       timeout: 3s
       retries: 10
