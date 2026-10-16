@@ -92,48 +92,90 @@ async def upload_file(file: UploadFile = File(...)) -> dict[str, object]:
     }
 
 
-@app.get("/files/{file_id}", tags=["Files"])
-async def download_file(file_id: str, download: bool = True) -> Response:
-    """Retrieve a file from SeaweedFS by the ID returned from POST /files."""
-    client: httpx.AsyncClient = app.state.http_client
-    try:
-        storage_response = await client.get(f"{SEAWEEDFS_VOLUME_URL}/{quote(file_id, safe=',')}")
-    except httpx.HTTPError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Could not reach SeaweedFS.",
-        ) from exc
 
-    if storage_response.status_code == status.HTTP_404_NOT_FOUND:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found.")
-    if storage_response.is_error:
+@app.get("/files/{file_id}", tags=["Files"])
+async def download_file(
+    file_id: str,
+    download: bool = True,
+) -> Response:
+    """Retrieve a file from SeaweedFS by the ID returned from POST /files."""
+
+    client: httpx.AsyncClient = app.state.http_client
+    url = f"{SEAWEEDFS_VOLUME_URL}/{quote(file_id, safe=',')}"
+
+    try:
+        storage_response = await client.get(url)
+        storage_response.raise_for_status()
+
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == status.HTTP_404_NOT_FOUND:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="File not found in storage.",
+            ) from exc
+
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="SeaweedFS could not retrieve the file.",
-        )
+            detail="SeaweedFS returned an unsuccessful response.",
+        ) from exc
 
-    content_type = storage_response.headers.get("content-type", "application/octet-stream")
-    headers: dict[str, str] = {}
-    if download:
-        # This first iteration uses the file ID as the download name; metadata storage comes later.
-        headers["Content-Disposition"] = f'attachment; filename="{file_id.replace(chr(34), "")}"'
-    return Response(content=storage_response.content, media_type=content_type, headers=headers)
-
-
-@app.delete("/files/{file_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Files"])
-async def delete_file(file_id: str) -> Response:
-    """Delete a stored file. PostgreSQL metadata tracking is intentionally deferred."""
-    client: httpx.AsyncClient = app.state.http_client
-    try:
-        storage_response = await client.delete(f"{SEAWEEDFS_VOLUME_URL}/{quote(file_id, safe=',')}")
-    except httpx.HTTPError as exc:
+    except httpx.RequestError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Could not reach SeaweedFS.",
         ) from exc
 
-    if storage_response.status_code == status.HTTP_404_NOT_FOUND:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found.")
-    if storage_response.is_error:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="SeaweedFS could not delete the file.")
+    content_type = storage_response.headers.get(
+        "content-type",
+        "application/octet-stream",
+    )
+
+    headers: dict[str, str] = {}
+
+    if download:
+        safe_filename = file_id.replace('"', "")
+        headers["Content-Disposition"] = (
+            f'attachment; filename="{safe_filename}"'
+        )
+
+    return Response(
+        content=storage_response.content,
+        media_type=content_type,
+        headers=headers,
+    )
+
+
+@app.delete(
+    "/files/{file_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Files"],
+)
+async def delete_file(file_id: str) -> Response:
+    """Delete a stored file. PostgreSQL metadata tracking is intentionally deferred."""
+
+    client: httpx.AsyncClient = app.state.http_client
+    url = f"{SEAWEEDFS_VOLUME_URL}/{quote(file_id, safe=',')}"
+
+    try:
+        storage_response = await client.delete(url)
+        storage_response.raise_for_status()
+
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == status.HTTP_404_NOT_FOUND:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="File not found.",
+            ) from exc
+
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="SeaweedFS could not delete the file.",
+        ) from exc
+
+    except httpx.RequestError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not reach SeaweedFS.",
+        ) from exc
+
     return Response(status_code=status.HTTP_204_NO_CONTENT)
