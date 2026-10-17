@@ -8,6 +8,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-localdocs}:${POSTGRES_PASSWORD:-localdocs_dev_password}@postgres:5432/${POSTGRES_DB:-localdocs}
       SEAWEEDFS_MASTER_URL: ${SEAWEEDFS_MASTER_URL:-http://seaweed-master:9333}
       SEAWEEDFS_VOLUME_URL: ${SEAWEEDFS_VOLUME_URL:-http://seaweed-volume:8080}
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS}
     depends_on:
       postgres:
         condition: service_healthy
@@ -21,6 +22,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     ports:
       - "5173:5173"
     depends_on:
