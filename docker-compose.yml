@@ -5,7 +5,7 @@ services:
       - "8000:8000"
     environment:
       APP_NAME: ${APP_NAME:-LocalDocs}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-localdocs}:${POSTGRES_PASSWORD:-localdocs_dev_password}@postgres:5432/${POSTGRES_DB:-localdocs}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-localdocs}:${POSTGRES_PASSWORD:-localdocs_dev_password}@postgres:5432/${POSTGRES_DB:-localdocs}
       SEAWEEDFS_MASTER_URL: ${SEAWEEDFS_MASTER_URL:-http://seaweed-master:9333}
       SEAWEEDFS_VOLUME_URL: ${SEAWEEDFS_VOLUME_URL:-http://seaweed-volume:8080}
     depends_on:

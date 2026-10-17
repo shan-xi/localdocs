@@ -1,114 +1,78 @@
 # LocalDocs
 
-A local document management system built with FastAPI, React + TypeScript, Docker Compose, PostgreSQL, and SeaweedFS.
+A local document management learning project using React + TypeScript, FastAPI, PostgreSQL, SeaweedFS, and Docker Compose.
 
-## Stage 2: upload and download files
+## Stage 3: persistent document metadata
 
-Stage 2 connects FastAPI to SeaweedFS and adds a small React upload screen. File content is stored in SeaweedFS. PostgreSQL is running but application metadata is not yet persisted there; that comes in a later stage.
+Stage 3 adds a PostgreSQL `documents` table. SeaweedFS stores file bytes; PostgreSQL stores the SeaweedFS file ID, original filename, content type, byte size, and upload timestamp. The React page now loads the saved document list and supports downloading and deleting documents.
 
-## Prerequisites
+## Requirements
 
 - Docker Desktop for Mac, running
 - Git
 
-You do not need to install Python, Node.js, or PostgreSQL on macOS for this stage; Docker runs them in containers.
+Python, Node.js, and PostgreSQL are run in Docker containers.
 
 ## Start
 
-Optionally copy the example environment file first (Compose also has safe local defaults):
+From the project root:
 
 ```bash
-cp .env.example .env
-```
-
-From the repository root:
-
-```bash
+cp .env.example .env  # optional; Compose has local development defaults
 docker compose up --build
 ```
 
-The first run may take a few minutes while Docker downloads images and builds the frontend and backend.
+Open:
 
-## Local services
+- Frontend: http://localhost:5173
+- FastAPI Swagger UI: http://localhost:8000/docs
+- Health check: http://localhost:8000/health
+- PostgreSQL: localhost:5432
+- SeaweedFS master: http://localhost:9333
 
-| Service | URL / port |
-|---|---|
-| React + Vite | http://localhost:5173 |
-| FastAPI health check | http://localhost:8000/health |
-| FastAPI Swagger UI | http://localhost:8000/docs |
-| PostgreSQL | localhost:5432 |
-| SeaweedFS master UI/API | http://localhost:9333 |
-| SeaweedFS volume server | http://localhost:8080 |
-
-## Try a file upload
-
-1. Open http://localhost:5173.
-2. Choose a small test file and click **Upload file**.
-3. After success, note the returned Storage ID.
-4. Click **Download stored file** to retrieve it through FastAPI.
-5. You can also use the interactive API docs at http://localhost:8000/docs.
-
-## API endpoints
+## Stage 3 API
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| GET | `/health` | Check that FastAPI is running |
-| POST | `/files` | Upload one file to SeaweedFS; returns a storage ID and file details |
-| GET | `/files/{file_id}` | Download a stored file by its storage ID |
-| DELETE | `/files/{file_id}` | Delete a stored file by its storage ID |
+| GET | `/health` | Check API health |
+| GET | `/files` | List document metadata from PostgreSQL |
+| POST | `/files` | Store bytes in SeaweedFS and metadata in PostgreSQL |
+| GET | `/files/{file_id}` | Look up metadata, then download bytes from SeaweedFS |
+| DELETE | `/files/{file_id}` | Delete bytes and metadata |
 
-Example upload with `curl`:
-
-```bash
-curl -F "file=@./sample.txt" http://localhost:8000/files
-```
-
-Use the `file_id` in the JSON response to download or delete that file:
+Example:
 
 ```bash
-curl -OJ "http://localhost:8000/files/YOUR_FILE_ID"
-curl -X DELETE "http://localhost:8000/files/YOUR_FILE_ID"
+curl -F 'file=@./sample.txt' http://localhost:8000/files
+curl http://localhost:8000/files
+curl -OJ 'http://localhost:8000/files/FILE_ID_FROM_UPLOAD'
+curl -X DELETE 'http://localhost:8000/files/FILE_ID_FROM_UPLOAD'
 ```
+
+## How metadata persistence works
+
+1. FastAPI asks the SeaweedFS master to assign a file ID.
+2. FastAPI sends the file bytes to SeaweedFS.
+3. FastAPI inserts a metadata row into PostgreSQL.
+4. `GET /files` queries PostgreSQL, so a refreshed page can show previous uploads.
+5. Download uses the database row to recover the original filename/content type, then retrieves bytes from SeaweedFS.
+
+The `documents` table is created on backend startup using SQLAlchemy `create_all`, suitable for this learning stage. For a mature application, use Alembic migrations and define explicit recovery/consistency strategies for failures across the database and object store.
 
 ## Useful commands
 
-Stop containers:
-
 ```bash
+docker compose ps
+docker compose logs -f backend
+docker compose logs -f postgres
 docker compose down
 ```
 
-Stop containers and delete persisted database/file-storage data:
+**Warning:** `docker compose down -v` deletes named volumes, including the PostgreSQL metadata and SeaweedFS stored data. Do not use it unless you intend to erase the local project data.
 
-```bash
-docker compose down -v
-```
+## Development notes
 
-View service logs:
-
-```bash
-docker compose logs -f
-```
-
-Check service status:
-
-```bash
-docker compose ps
-```
-
-## Stage 2 acceptance checks
-
-1. Open http://localhost:5173 and see the upload form.
-2. Upload a small test file and receive a storage ID.
-3. Download the file and confirm its contents match the original.
-4. Open http://localhost:8000/docs and see the `Files` endpoints.
-5. Check `docker compose ps` to confirm the services are running.
-
-## Notes and current limitations
-
-- This is a local development setup, not a production deployment.
-- The example PostgreSQL password is for local development only.
-- Uploaded content persists in the SeaweedFS Docker volume.
-- File metadata is not yet saved in PostgreSQL, so the UI does not have a persistent list of previous uploads. Keep the returned storage ID if you want to retrieve a file later.
-- The API reads each uploaded file into memory in this stage; large-file streaming and upload limits can be improved later.
-- CORS is restricted to the local Vite development origins.
+- The example database password is for local development only.
+- The API reads uploaded content into memory; file-size limits and streaming are future improvements.
+- PostgreSQL and SeaweedFS are separate systems. A real production design needs stronger retry, reconciliation, and migration strategies.
+- This project is intended for localhost development, not production deployment.
