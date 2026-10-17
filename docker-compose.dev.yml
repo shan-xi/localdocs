@@ -1,0 +1,70 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      APP_NAME: ${APP_NAME:-LocalDocs}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-localdocs}:${POSTGRES_PASSWORD:-localdocs_dev_password}@postgres:5432/${POSTGRES_DB:-localdocs}
+      SEAWEEDFS_MASTER_URL: ${SEAWEEDFS_MASTER_URL:-http://seaweed-master:9333}
+      SEAWEEDFS_VOLUME_URL: ${SEAWEEDFS_VOLUME_URL:-http://seaweed-volume:8080}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      seaweed-master:
+        condition: service_started
+      seaweed-volume:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-localdocs}
+      POSTGRES_USER: ${POSTGRES_USER:-localdocs}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-localdocs_dev_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-localdocs} -d ${POSTGRES_DB:-localdocs}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  seaweed-master:
+    image: chrislusf/seaweedfs:latest
+    command: master -ip=seaweed-master -mdir=/data
+    ports:
+      - "9333:9333"
+    volumes:
+      - seaweed_master_data:/data
+    restart: unless-stopped
+
+  seaweed-volume:
+    image: chrislusf/seaweedfs:latest
+    command: volume -mserver=seaweed-master:9333 -ip=seaweed-volume -dir=/data -port=8080
+    depends_on:
+      - seaweed-master
+    ports:
+      - "8080:8080"
+    volumes:
+      - seaweed_volume_data:/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  seaweed_master_data:
+  seaweed_volume_data:
