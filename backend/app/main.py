@@ -68,8 +68,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title=APP_NAME,
-    description="Local document management API. Stage 3 persists document metadata in PostgreSQL and file content in SeaweedFS.",
-    version="0.3.0",
+    description="Local document management API. Stage 4 supports document listing, persistent metadata, and file content stored in SeaweedFS.",
+    version="0.4.0",
     lifespan=lifespan,
 )
 
