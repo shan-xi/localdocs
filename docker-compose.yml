@@ -1,8 +1,8 @@
 services:
   backend:
     build: ./backend
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
       APP_NAME: ${APP_NAME:-LocalDocs}
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-localdocs}:${POSTGRES_PASSWORD:-localdocs_dev_password}@postgres:5432/${POSTGRES_DB:-localdocs}
