@@ -72,7 +72,6 @@ jobs:
       - name: Check API health
         run: |
           set -eu
-      
           cd "$HOME/localdocs"
       
           for i in $(seq 1 12); do

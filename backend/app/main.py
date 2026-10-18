@@ -27,9 +27,10 @@ app = FastAPI(
     description="Local document management API with PostgreSQL metadata and SeaweedFS file content.",
     version="1.0.0",
     lifespan=lifespan,
-    docs_url="/api/docs",
-    openapi_url="/api/openapi.json",
-    redoc_url="/api/redoc",
+    root_path="/api",
+    docs_url="/docs",
+    openapi_url="/openapi.json",
+    redoc_url="/redoc",
 )
 app.add_middleware(
     CORSMiddleware,
