@@ -87,5 +87,5 @@ jobs:
       
           echo "API health check failed"
           docker compose ps
-          docker compose logs --tail=100 nginx backend
+          docker compose logs --tail=100 frontend backend
           exit 1
