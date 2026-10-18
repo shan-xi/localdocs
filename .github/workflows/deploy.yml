@@ -67,7 +67,7 @@ jobs:
           git pull --ff-only origin main
 
           docker compose config -q
-          docker compose up -d --build
+          docker compose up -d --build --scale backend=3
 
       - name: Check API health
         run: |

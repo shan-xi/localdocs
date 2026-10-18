@@ -25,8 +25,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(
     title=settings.APP_NAME,
     description="Local document management API with PostgreSQL metadata and SeaweedFS file content.",
-    version="0.4.0",
+    version="1.0.0",
     lifespan=lifespan,
+    docs_url="/api/docs",
+    openapi_url="/api/openapi.json",
+    redoc_url="/api/redoc",
 )
 app.add_middleware(
     CORSMiddleware,
