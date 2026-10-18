@@ -73,19 +73,6 @@ jobs:
         run: |
           set -eu
           cd "$HOME/localdocs"
-      
-          for i in $(seq 1 12); do
-            if curl --fail --silent --show-error 
-              http://0.0.0.0/api/health; then
-              echo "API health check passed"
-              exit 0
-            fi
-      
-            echo "Waiting for API to become healthy... ($i/12)"
-            sleep 5
-          done
-      
-          echo "API health check failed"
           docker compose ps
           docker compose logs --tail=100 frontend backend
           exit 1
