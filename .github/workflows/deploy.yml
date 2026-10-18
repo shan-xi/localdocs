@@ -68,11 +68,3 @@ jobs:
 
           docker compose config -q
           docker compose up -d --build --scale backend=3
-
-      - name: Check API health
-        run: |
-          set -eu
-          cd "$HOME/localdocs"
-          docker compose ps
-          docker compose logs --tail=100 frontend backend
-          exit 1
