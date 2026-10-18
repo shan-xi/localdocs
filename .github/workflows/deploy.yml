@@ -76,7 +76,7 @@ jobs:
       
           for i in $(seq 1 12); do
             if curl --fail --silent --show-error 
-              http://127.0.0.1/api/health; then
+              http://0.0.0.0/api/health; then
               echo "API health check passed"
               exit 0
             fi
