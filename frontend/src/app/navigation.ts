@@ -65,6 +65,7 @@ export function useAppNavigation() {
         if (normalizePath(window.location.pathname) !== nextPath) {
             window.history.pushState(null, '', nextPath)
             setPathname(nextPath)
+            window.dispatchEvent(new PopStateEvent('popstate'))
         }
     }, [])
 
