@@ -67,4 +67,4 @@ jobs:
           git pull --ff-only origin main
 
           docker compose config -q
-          docker compose up -d --build --scale backend=3
+          docker compose up -d --build --scale backend=1
