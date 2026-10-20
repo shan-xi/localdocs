@@ -1,15 +1,18 @@
-import { useAppContext } from '../../app-context'
+import { useDocumentData } from '../../features/documents/context/DocumentDataContext'
+import { useDocumentUIContext } from '../../features/documents/context/DocumentUIContext'
+import { useNotificationSettings } from '../../features/settings/context/NotificationContext'
+import { useAppNavigation } from '../../app/navigation'
 
 export function Toolbar() {
-  const {
-    page, setPage, search, setSearch, view, setView, loadDocuments, isRefreshing,
-    notificationsEnabled, notice, error, setSuccessNotice,
-  } = useAppContext()
+  const { page, openPage } = useAppNavigation()
+  const { search, setSearch, view, setView } = useDocumentUIContext()
+  const { loadDocuments, isRefreshing, notice, error, setSuccessNotice } = useDocumentData()
+  const { notificationsEnabled } = useNotificationSettings()
 
   return <header className="toolbar">
     <label className="search-box"><span aria-hidden="true">⌕</span><input value={search} onChange={(event) => {
       setSearch(event.target.value)
-      if (page !== 'documents') setPage('documents')
+      if (page !== 'documents') openPage('documents')
     }} placeholder="Find Documents" aria-label="Find documents" /></label>
     <div className="view-switch"><span>View:</span>
       <button type="button" className={view === 'grid' ? 'selected' : ''} onClick={() => setView('grid')}>▦ <span>Grid</span></button>
@@ -21,10 +24,10 @@ export function Toolbar() {
       if (notificationsEnabled) setSuccessNotice('Document list refresh requested.')
     }} disabled={isRefreshing}>↻</button>
     <button className={`toolbar-icon notification-icon ${page === 'notifications' ? 'toolbar-active' : ''}`} type="button"
-      aria-label="Notifications" title="Notifications" onClick={() => setPage('notifications')}>
+      aria-label="Notifications" title="Notifications" onClick={() => openPage('notifications')}>
       ♧{notificationsEnabled && (notice || error) && <span className="notification-dot" />}
     </button>
     <button className={`avatar ${page === 'profile' ? 'avatar-active' : ''}`} type="button" aria-label="Local user profile"
-      title="Local user" onClick={() => setPage('profile')}>L</button>
+      title="Local user" onClick={() => openPage('profile')}>L</button>
   </header>
 }

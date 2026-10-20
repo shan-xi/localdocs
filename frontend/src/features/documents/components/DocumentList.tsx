@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
-import { useAppContext } from '../../../app-context'
+import { useDocumentData } from '../context/DocumentDataContext'
+import { useDocumentUIContext } from '../context/DocumentUIContext'
+import { useNotificationSettings } from '../../settings/context/NotificationContext'
 import { API_FILES_URL } from '../../../lib/config'
 import { canPreview, documentType, fileKind } from '../../../lib/file-utils'
 import { formatBytes, formatShortDate } from '../../../lib/format'
@@ -18,10 +20,12 @@ function matchesFilter(file: DocumentRecord, filter: DocumentFilter): boolean {
 }
 
 export function DocumentList() {
+  const { documents, isLoading, remove, deletingId } = useDocumentData()
   const {
-    documents, isLoading, view, search, typeFilter, setTypeFilter, setPreviewDocument,
-    remove, deletingId, notificationsEnabled, pageSize, setPageSize, currentPage, setCurrentPage,
-  } = useAppContext()
+    view, search, typeFilter, setTypeFilter, setPreviewDocument,
+    pageSize, setPageSize, currentPage, setCurrentPage,
+  } = useDocumentUIContext()
+  const { notificationsEnabled } = useNotificationSettings()
 
   const filteredDocuments = useMemo(() => documents.filter((file) =>
     file.filename.toLowerCase().includes(search.toLowerCase().trim()) && matchesFilter(file, typeFilter)

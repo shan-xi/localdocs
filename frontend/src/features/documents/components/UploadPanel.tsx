@@ -1,15 +1,16 @@
 import { useRef } from 'react'
-import { useAppContext } from '../../../app-context'
+import { useDocumentData } from '../context/DocumentDataContext'
+import { useDocumentUIContext } from '../context/DocumentUIContext'
+import { useNotificationSettings } from '../../settings/context/NotificationContext'
 import { fileKind } from '../../../lib/file-utils'
 import { formatBytes, formatDate } from '../../../lib/format'
 import type { DocumentRecord } from '../../../types/document'
 
 export function UploadPanel() {
   const inputRef = useRef<HTMLInputElement>(null)
-  const {
-    documents, selectedFile, setSelectedFile, isUploading, uploadProgress, upload,
-    remove, deletingId, notificationsEnabled,
-  } = useAppContext()
+  const { documents, isUploading, uploadProgress, upload, remove, deletingId } = useDocumentData()
+  const { selectedFile, setSelectedFile } = useDocumentUIContext()
+  const { notificationsEnabled } = useNotificationSettings()
   const recentFiles = [...documents].sort((a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()).slice(0, 5)
 
   async function handleUpload() {

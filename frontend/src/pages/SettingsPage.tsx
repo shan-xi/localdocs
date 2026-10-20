@@ -1,7 +1,9 @@
-import { useAppContext } from '../app-context'
+import { useDocumentUIContext } from '../features/documents/context/DocumentUIContext'
+import { useNotificationSettings } from '../features/settings/context/NotificationContext'
 
 export function SettingsPage() {
-  const { view, setView, pageSize, setPageSize, notificationsEnabled, setNotificationsEnabled } = useAppContext()
+  const { view, setView, pageSize, setPageSize } = useDocumentUIContext()
+  const { notificationsEnabled, setNotificationsEnabled } = useNotificationSettings()
   return <div className="app-page">
     <div className="page-heading"><p className="eyebrow">PREFERENCES</p><h1>Settings</h1><p>Adjust how the LocalDocs interface behaves in this session.</p></div>
     <div className="page-card settings-card">

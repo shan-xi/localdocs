@@ -1,11 +1,15 @@
-import { useAppContext } from '../app-context'
+import { useDocumentData } from '../features/documents/context/DocumentDataContext'
+import { useDocumentUIContext } from '../features/documents/context/DocumentUIContext'
+import { useAppNavigation } from '../app/navigation'
 import { EmptyState } from '../components/common/EmptyState'
 import { API_FILES_URL } from '../lib/config'
 import { canPreview, fileKind } from '../lib/file-utils'
 import { formatBytes, formatDate } from '../lib/format'
 
 export function RecentPage() {
-  const { documents, setPreviewDocument, openPage } = useAppContext()
+  const { documents } = useDocumentData()
+  const { setPreviewDocument } = useDocumentUIContext()
+  const { openPage } = useAppNavigation()
   const recentFiles = [...documents].sort((a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime())
   return <div className="app-page">
     <div className="page-heading"><p className="eyebrow">YOUR LIBRARY</p><h1>Recent documents</h1><p>Files ordered by their upload time, newest first.</p></div>

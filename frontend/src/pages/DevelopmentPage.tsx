@@ -1,8 +1,8 @@
-import { useAppContext } from '../app-context'
+import { useDocumentData } from '../features/documents/context/DocumentDataContext'
 import { API_BASE_URL } from '../lib/config'
 
 export function DevelopmentPage() {
-  const { apiStatus, refreshApiHealth, loadDocuments } = useAppContext()
+  const { apiStatus, refreshApiHealth, loadDocuments } = useDocumentData()
   const status = apiStatus === 'online' ? 'Online' : apiStatus === 'offline' ? 'Offline' : 'Checking'
   const statusClass = apiStatus === 'online' ? 'status-online' : apiStatus === 'offline' ? 'status-offline' : 'status-pending'
   return <div className="app-page">

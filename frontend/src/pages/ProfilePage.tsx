@@ -1,8 +1,10 @@
-import { useAppContext } from '../app-context'
+import { useDocumentData } from '../features/documents/context/DocumentDataContext'
+import { useAppNavigation } from '../app/navigation'
 import { API_BASE_URL } from '../lib/config'
 
 export function ProfilePage() {
-  const { documents, openPage } = useAppContext()
+  const { documents } = useDocumentData()
+  const { openPage } = useAppNavigation()
   return <div className="app-page">
     <div className="page-heading"><p className="eyebrow">LOCAL PROFILE</p><h1>Local user</h1><p>This application runs locally and does not have sign-in or account management.</p></div>
     <div className="page-card profile-card"><div className="profile-avatar">L</div>

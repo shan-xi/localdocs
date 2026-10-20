@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ApiStatus, DocumentRecord } from '../../../types/document'
 import { checkApiHealth as requestApiHealth, deleteDocument as requestDelete, fetchDocuments, uploadDocument as requestUpload } from '../../../api/documentsApi'
 
@@ -84,9 +84,13 @@ export function useDocuments(logActivity: (message: string) => void) {
   const dismissMessages = useCallback(() => { setNotice(''); setError('') }, [])
   const setSuccessNotice = useCallback((message: string) => setNotice(message), [])
 
-  return {
+  return useMemo(() => ({
     documents, isLoading, isRefreshing, isUploading, uploadProgress, deletingId,
     error, notice, apiStatus, loadDocuments, refreshApiHealth, upload, remove,
     dismissMessages, setSuccessNotice,
-  }
+  }), [
+    documents, isLoading, isRefreshing, isUploading, uploadProgress, deletingId,
+    error, notice, apiStatus, loadDocuments, refreshApiHealth, upload, remove,
+    dismissMessages, setSuccessNotice,
+  ])
 }

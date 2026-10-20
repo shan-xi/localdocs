@@ -1,4 +1,6 @@
-import { useAppContext } from '../app-context'
+import { useDocumentData } from '../features/documents/context/DocumentDataContext'
+import { useDocumentUIContext } from '../features/documents/context/DocumentUIContext'
+import { useAppNavigation } from '../app/navigation'
 import { EmptyState } from '../components/common/EmptyState'
 import { StatCard } from '../components/common/StatCard'
 import { API_BASE_URL } from '../lib/config'
@@ -6,7 +8,9 @@ import { canPreview, fileKind } from '../lib/file-utils'
 import { formatBytes, formatDate } from '../lib/format'
 
 export function DashboardPage() {
-  const { documents, apiStatus, setPreviewDocument, openPage } = useAppContext()
+  const { documents, apiStatus } = useDocumentData()
+  const { setPreviewDocument } = useDocumentUIContext()
+  const { openPage } = useAppNavigation()
   const recentFiles = [...documents].sort((a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()).slice(0, 5)
   const totalBytes = documents.reduce((sum, file) => sum + file.size_bytes, 0)
   const status = apiStatus === 'online' ? 'Online' : apiStatus === 'offline' ? 'Offline' : 'Checking'

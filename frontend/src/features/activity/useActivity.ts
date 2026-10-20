@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { ActivityRecord } from '../../types/document'
 
 export function useActivity() {
@@ -12,5 +12,5 @@ export function useActivity() {
     }, ...previous].slice(0, 50))
   }, [])
 
-  return { activity, logActivity }
+  return useMemo(() => ({ activity, logActivity }), [activity, logActivity])
 }
